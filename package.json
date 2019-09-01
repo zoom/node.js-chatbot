@@ -1,0 +1,60 @@
+{
+  "name": "@zoomus/chatbot",
+  "version": "0.3.12",
+  "description": "Zoom Node.js Chatbot Library",
+  "keywords": [
+    "zoom",
+    "chatbot",
+    "api",
+    "oauth2",
+    "http",
+    "rest"
+  ],
+  "types": "./index.d.ts",
+  "main": "./production/index.js",
+  "scripts": {
+    "start": "node -r source-map-support/register ./@env/start.js",
+    "build": "node ./@env/build.js",
+    "test-dev": "NODE_ENV=dev mocha ./tests/index.*.js",
+    "test-prod": "NODE_ENV=prod mocha ./tests/index.*.js",
+    "example1": "cd example && node -r source-map-support/register ./message.js",
+    "example2": "cd example && node -r source-map-support/register ./oauthMessage.js",
+    "example3": "cd example && node -r source-map-support/register ./proOauthMessage.js"
+  },
+  "author": "fox jiang",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/zoom/node.js-chatbot#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zoom/node.js-chatbot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zoom/node.js-chatbot/issues"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.3.3",
+    "babel-plugin-add-module-exports": "^1.0.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
+    "body-parser": "^1.18.3",
+    "chai": "^4.2.0",
+    "chalk": "^2.4.2",
+    "cross-spawn": "^6.0.5",
+    "dotenv": "^7.0.0",
+    "eslint": "^5.13.0",
+    "express": "^4.16.4",
+    "fs-extra": "^7.0.1",
+    "gulp": "^4.0.0",
+    "gulp-babel": "^8.0.0",
+    "gulp-eslint": "^5.0.0",
+    "gulp-plumber": "^1.2.1",
+    "gulp-sourcemaps": "^2.6.4",
+    "mocha": "^5.2.0",
+    "source-map-support": "^0.5.10"
+  },
+  "dependencies": {
+    "date-fns": "^1.30.1",
+    "debug": "^4.1.1",
+    "delay": "^4.2.0",
+    "request": "^2.88.0"
+  }
+}

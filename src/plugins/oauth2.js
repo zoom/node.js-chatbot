@@ -1,0 +1,63 @@
+import utils from '../utils/index';
+import api from '../services/api';
+
+let createAppString = (appKey, appSecret) => {
+  return 'Basic ' + Buffer.from(`${appKey}:${appSecret}`).toString('base64');
+};
+
+let oauth2 = function(appKey, appSecret, redirect_uri, code) {
+  // let { appKey, appSecret, redirect_uri, code: storeCode } = store.get(["appKey", "appSecret", "code", "redirect_uri"]);
+
+  return new Promise((resolve, reject) => {
+    // if (!appKey || !appSecret) {
+    //     reject(`must config appKey and appSecret`);
+    //     return;
+    // }
+    // if (!code) {
+    //     reject({code:400,errorMessage:`must input code from oauth`});
+    //     return;
+    // }
+
+    let appString = createAppString(appKey, appSecret);
+    let url = api.oauth2.get('url', { code, redirect_uri });
+    let method = api.oauth2.get('method');
+
+    utils
+      .request({
+        url,
+        method,
+        headers: {
+          Authorization: appString
+        }
+      })
+      .then(response => {
+        let { body } = response;
+        resolve(body);
+        // if(statusCode>=300){
+        //     reject(body);
+        //     return;
+        // }
+
+        // if (typeof body === 'string') {
+        //     // utils.debug(body);
+        //     reject(body);
+        //     return;
+        // }
+        // let { access_token } = body;
+        // if (access_token) {
+        //     resolve(body);
+        //     // let storeObj = { access_token, refresh_token, token_type, expires_in };
+        //     // store.set(storeObj);
+        //     // resolve(storeObj);
+        // }
+        // else {
+        //     reject(body);
+        // }
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
+};
+
+export default oauth2;

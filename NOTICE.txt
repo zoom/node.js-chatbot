@@ -1,0 +1,5 @@
+Zoom Node.js Chatbot Library
+Copyright zoom.us, Inc. All Rights Reserved.
+
+This product includes software developed at
+Zoom Web Services

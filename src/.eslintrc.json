@@ -1,0 +1,45 @@
+{
+  "extends": "eslint:recommended",
+  "env": {
+    "node": true,
+    "browser": true,
+    "es6": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 9,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "plugins": [
+  ],
+  "rules": {
+    "quotes": [
+      "error",
+      "single",
+      {
+        "allowTemplateLiterals":true
+      }
+    ],
+    "no-console": "off",
+    "no-extra-semi": [
+      "off"
+    ],
+    "semi": [
+      "warn",
+      "always"
+    ],
+    "no-unused-vars": [
+      "warn"
+    ],
+    "no-unused-expressions": [
+      0,
+      {
+        "allowTernary": true,
+        "allowShortCircuit": true,
+        "allowTaggedTemplates": true
+      }
+    ]
+  }
+}
