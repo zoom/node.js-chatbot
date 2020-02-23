@@ -194,7 +194,6 @@ class UserToken extends _index2.default.Event {
       try {
         judge = (0, _is_after2.default)(date, tokenEnd);
       } catch (e) {
-        console.log(e);
         return false;
       }
 

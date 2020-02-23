@@ -154,7 +154,6 @@ class UserToken extends utils.Event{
           judge=isAfter(date, tokenEnd);
         }
         catch(e){
-          console.log(e);
           return false;
         }
         return judge;
