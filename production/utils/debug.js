@@ -28,11 +28,7 @@ let debugUtils = (type = 'work') => msg => {
 
     (0, _debug2.default)(type)(newMsg);
   }
-}; // debugUtils.debugConfig={open:false};
-// debugUtils.decorate=function(debugConfig){
-//     this.debugConfig=debugConfig;
-// };
-
+};
 
 exports.default = debugUtils;
 module.exports = exports.default;

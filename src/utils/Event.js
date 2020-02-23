@@ -1,5 +1,3 @@
-import branch from './branch';
-// import debug from './debug';
 class Event {
     constructor() {
         this.eventStore = {//not set valid 

@@ -25,10 +25,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 let oauth2 = function (appKey, appSecret, redirect_uri) {
   return new _index2.default(appKey, appSecret, redirect_uri);
-}; // let zoomClient=function(){
-//     return new Client();
-// }
-
+};
 
 let setting = {
   retry(opt) {
@@ -67,7 +64,11 @@ let client = function (...props) {
   return new _index4.default(...props);
 };
 
+let log = function (func) {
+  _log2.default.decorate(func);
+};
+
 exports.oauth2 = oauth2;
 exports.client = client;
 exports.setting = setting;
-exports.log = _log2.default;
+exports.log = log;

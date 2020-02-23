@@ -4,13 +4,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _branch = require("./branch");
-
-var _branch2 = _interopRequireDefault(_branch);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-// import debug from './debug';
 class Event {
   constructor() {
     this.eventStore = {//not set valid 

@@ -8,12 +8,8 @@ let config={
     debug:false,
     url: 'https://api.zoom.us'
     // env:'production',
-    // log:null
 };
 
-
-
-// utils.debug.decorate(config.debug);
 
 
 

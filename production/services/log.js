@@ -3,19 +3,43 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-// import debug from 'debug';
-exports.default = {
-  error(msg) {
-    console.log('nodebots:error', msg);
+let log = {
+  store: null,
+
+  decorate(func) {
+    if (typeof func === 'function') {
+      this.store = func;
+    }
   },
 
-  warn(msg) {
-    console.log('nodebots:warn', msg);
+  parse(opt) {
+    if (typeof opt === 'object') {
+      let {
+        type,
+        message
+      } = opt;
+
+      if (type === 'http') {
+        return {
+          type,
+          message: Object.assign({}, message)
+        };
+      } else {
+        return opt;
+      }
+    } else {
+      return opt;
+    }
   },
 
-  info(msg) {
-    console.log('nodebots:warn', msg);
+  run(opt) {
+    let func = this.store;
+
+    if (typeof func === 'function') {
+      func(this.parse(opt));
+    }
   }
 
 };
+exports.default = log;
 module.exports = exports.default;

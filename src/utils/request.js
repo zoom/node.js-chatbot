@@ -1,73 +1,126 @@
-import request from 'request';
-import querystring from 'querystring';
+import nodefetch from 'node-fetch';
+// import querystring from 'querystring';
 import debug from './debug';
+import serviceLog from '../services/log';
+import AbortController from 'abort-controller';
 
-
-let requestWrap=(opt)=>{
-    let { body, formData, form, method = 'get', url, headers = {}, query = {}, cookie, timeout}=opt;
-
-    return new Promise((resolve,reject)=>{
-      let type,data;
-      if(typeof body==='object'){
-          type = 'body', data = body;
-      }  
-      else if (typeof formData==='object'){
-          type='formData',data=formData;
-      }
-      else if(typeof form==='object'){
-        type='form',data=form;
-      }
-      let dataOption={qs:query,headers,url,method};
-      if(type){
-        dataOption[type]=data;
-      }
- 
-      if(type==='body'){
-          dataOption.json=true;
-      }
-        if (typeof cookie==='object') {
-            let j=request.jar();
-            let cookieRequest = request.cookie(querystring.stringify(cookie));
-            j.setCookie(cookieRequest,url);
-            dataOption.jar=j;
-        }
-        
-        debug('http')(dataOption);
-        if (typeof timeout==='number'){
-            dataOption.timeout=timeout;
-        }
-        request(dataOption,function(error,response){
-            
-          
-            if(error){
-                reject(error);
-            }
-            else{
-                let code = response.statusCode;
-                let oldBody=response.body;
-                let newBody;
-                try{
-                    newBody = JSON.parse(oldBody);
-                }
-                catch(e){
-                    newBody=oldBody;
-                }
-                if(code>=300){
-                    reject(newBody);
-                }
-                else{
-                    response.body=newBody;
-                    resolve(response);
-                }
-                // response.body=newBody;
-                // resolve(response);
-            }
-
-
-        });
-
-    });
+let errorHandle=(logDataOption,errorInfo,reject)=>{
+  serviceLog.run({
+    type: 'http',
+    message: {
+      request: logDataOption,
+      response: null,
+      error:errorInfo
+    }
+  });
+  serviceLog.run({
+    type: 'error_notice',
+    message: {
+      error:errorInfo
+    }
+  });
+  reject(Object.assign({},errorInfo));
 };
 
+let requestWrap = opt => {
+  let {
+    body,
+    method = 'get',
+    url,
+    headers = {},
+    query = {},
+    timeout
+  } = opt;
+  return new Promise((resolve, reject) => {
+
+
+    if(typeof body==='object'){
+      body=JSON.stringify(body);
+    }
+
+    let dataOption={
+      method,
+      headers,
+      body
+    };
+    let timeoutResult=null;
+    if(typeof timeout==='number'){
+      const controller = new AbortController();
+      timeoutResult=setTimeout(
+        () => { controller.abort(); },
+        timeout,
+      );
+    }
+
+    if(typeof query==='object'){
+      let urlObject=new URL(url);
+      Object.keys(query).forEach((name)=>{
+        urlObject.searchParams.set(name,query[name]);
+      });
+      url=urlObject.href;
+    }
+
+    let logDataOption=Object.assign({url},dataOption);
+    debug('http')(logDataOption);
+
+
+    let nodefeatchResult=nodefetch(url,dataOption)
+    .then((res)=>{
+      let status=res.status;
+      res.text().then((responseBody)=>{
+        let responseText=responseBody;
+        if(typeof responseBody==='string'){
+          try{
+            responseBody=JSON.parse(responseBody);
+          }
+          catch(e){
+            errorHandle(logDataOption,{
+              type:'parseError',
+              status,
+              message:responseText
+            },reject);
+            return;
+          }
+        }
+        if (status >= 200 && status < 300){//success 
+          serviceLog.run({
+            type: 'http',
+            message: {
+              request: logDataOption,
+              response: {
+                status,
+                body:responseBody
+              },
+              error:null
+            }
+          });
+          resolve({status,body:responseBody});
+        } else {//success but status fail
+          errorHandle(logDataOption,{
+            status:status,
+            message:responseBody
+          },reject);
+          return;
+        }
+      })
+      .catch((e)=>{//promise all error
+        errorHandle(logDataOption,{
+          type:'parseError',
+          status,
+          message:e
+        },reject);
+        return;
+      });
+    })
+    .catch((e)=>{//request error
+      errorHandle(logDataOption,e,reject);
+    });
+    if(timeoutResult!==null){
+      nodefeatchResult.finally(()=>{
+        clearTimeout(timeoutResult);
+      });
+    }
+  });
+};
 
 export default requestWrap;

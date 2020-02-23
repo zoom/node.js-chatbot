@@ -4,7 +4,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-//futher will integrate with debug with console.log()
 class ParamError extends Error {
   constructor(message) {
     super(message);

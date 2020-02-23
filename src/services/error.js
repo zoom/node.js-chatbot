@@ -1,4 +1,3 @@
-//futher will integrate with debug with console.log()
 
 class ParamError extends Error {
     constructor(message) {

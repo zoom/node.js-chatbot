@@ -2,7 +2,7 @@ import utils from '../utils/index';
 import transform from '../services/transform';
 import ClientApp from './ClientApp';
 import configSet from '../services/config';
-
+import serviceLog from '../services/log';
 
 let createInfo = {
   help(commandStore, name) {
@@ -119,7 +119,7 @@ class Client extends utils.Event {
     // this.commandNameStore=[];
     this.focusApp = null;
     this.name = name;
-    this.config = { help: true, errorHelp: false };
+    this.config = { help: false, errorHelp: false };
     this.v = '';
   }
   configurate(opt) {
@@ -129,15 +129,13 @@ class Client extends utils.Event {
     this.config = Object.assign(this.config, opt);
     return this;
   }
-  equalCommand(originCmd,cmd){
-    if(configSet.ifCase===true){
-      return originCmd===cmd;
-    }
-    else{
-      if(typeof originCmd==='string'&&typeof cmd==='string'){
-        return originCmd.toLowerCase()===cmd.toLowerCase();
-      }
-      else{
+  equalCommand(originCmd, cmd) {
+    if (configSet.ifCase === true) {
+      return originCmd === cmd;
+    } else {
+      if (typeof originCmd === 'string' && typeof cmd === 'string') {
+        return originCmd.toLowerCase() === cmd.toLowerCase();
+      } else {
         return false;
       }
     }
@@ -147,18 +145,17 @@ class Client extends utils.Event {
       return false;
     }
     let { commandStore } = this;
-    
+
     for (let obj of commandStore) {
-      if(typeof obj.command!=='string'){
+      if (typeof obj.command !== 'string') {
         continue;
       }
-      if(configSet.ifCase===true){
+      if (configSet.ifCase === true) {
         if (command === obj.command) {
           return true;
         }
-      }
-      else{
-        if(command.toLowerCase()===((obj.command).toLowerCase())){
+      } else {
+        if (command.toLowerCase() === obj.command.toLowerCase()) {
           return true;
         }
       }
@@ -264,6 +261,12 @@ class Client extends utils.Event {
       appKey,
       verification_token
     });
+    if(out.status===false){
+      serviceLog.run({
+        type: 'error_notice',
+        message: {error:out.errorMessage}
+      });
+    }
     return out;
   }
   triggerHelp(accountId, toJid) {
@@ -316,25 +319,40 @@ class Client extends utils.Event {
     return this._autoBackMsg(data, 'help');
   }
   async handleNotification(result, allCallback) {
-    let { type, innerCmd, eventName, data, cmdOption = {}, message } = result;
-    if(!configSet.ifCase&&(typeof cmdOption.command==='string')){
-      cmdOption.command=cmdOption.command.toLowerCase();
+    let {
+      type,
+      innerCmd,
+      eventName,
+      data,
+      cmdOption = {},
+      message,
+      eventFullName
+    } = result;
+    if (!configSet.ifCase && typeof cmdOption.command === 'string') {
+      cmdOption.command = cmdOption.command.toLowerCase();
     }
     let { focusApp, config } = this;
     if (
       config.help === true &&
       eventName === 'notification' &&
-      this.equalCommand(innerCmd,'help') &&
+      this.equalCommand(innerCmd, 'help') &&
       focusApp !== null
     ) {
       try {
         await this._triggerHelp(data);
-        allCallback(null,{payload:data,type,command: cmdOption.command,message});
+        allCallback(null, {
+          event:eventFullName,
+          payload: data,
+          type,
+          command: cmdOption.command,
+          message
+        });
       } catch (e) {
         allCallback({ type: 'triggerHelp', errorMessage: e });
       }
     } else {
       let sendData = {
+        event: eventFullName,
         payload: data,
         data: cmdOption.hint,
         type,
@@ -376,6 +394,7 @@ class Client extends utils.Event {
   async handleAction(result, allCallback) {
     let { type, eventName, eventFullName, data, info } = result;
     let sendData = {
+      event: eventFullName,
       payload: data,
       type,
       info,

@@ -9,9 +9,7 @@ let config = {
   ifCase: true,
   debug: false,
   url: 'https://api.zoom.us' // env:'production',
-  // log:null
 
-}; // utils.debug.decorate(config.debug);
-
+};
 exports.default = config;
 module.exports = exports.default;

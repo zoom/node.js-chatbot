@@ -4,97 +4,148 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _request = require("request");
+var _nodeFetch = require("node-fetch");
 
-var _request2 = _interopRequireDefault(_request);
-
-var _querystring = require("querystring");
-
-var _querystring2 = _interopRequireDefault(_querystring);
+var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
 
 var _debug = require("./debug");
 
 var _debug2 = _interopRequireDefault(_debug);
 
+var _log = require("../services/log");
+
+var _log2 = _interopRequireDefault(_log);
+
+var _abortController = require("abort-controller");
+
+var _abortController2 = _interopRequireDefault(_abortController);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// import querystring from 'querystring';
+let errorHandle = (logDataOption, errorInfo, reject) => {
+  _log2.default.run({
+    type: 'http',
+    message: {
+      request: logDataOption,
+      response: null,
+      error: errorInfo
+    }
+  });
+
+  _log2.default.run({
+    type: 'error_notice',
+    message: {
+      error: errorInfo
+    }
+  });
+
+  reject(Object.assign({}, errorInfo));
+};
 
 let requestWrap = opt => {
   let {
     body,
-    formData,
-    form,
     method = 'get',
     url,
     headers = {},
     query = {},
-    cookie,
     timeout
   } = opt;
   return new Promise((resolve, reject) => {
-    let type, data;
-
     if (typeof body === 'object') {
-      type = 'body', data = body;
-    } else if (typeof formData === 'object') {
-      type = 'formData', data = formData;
-    } else if (typeof form === 'object') {
-      type = 'form', data = form;
+      body = JSON.stringify(body);
     }
 
     let dataOption = {
-      qs: query,
+      method,
       headers,
-      url,
-      method
+      body
     };
-
-    if (type) {
-      dataOption[type] = data;
-    }
-
-    if (type === 'body') {
-      dataOption.json = true;
-    }
-
-    if (typeof cookie === 'object') {
-      let j = _request2.default.jar();
-
-      let cookieRequest = _request2.default.cookie(_querystring2.default.stringify(cookie));
-
-      j.setCookie(cookieRequest, url);
-      dataOption.jar = j;
-    }
-
-    (0, _debug2.default)('http')(dataOption);
+    let timeoutResult = null;
 
     if (typeof timeout === 'number') {
-      dataOption.timeout = timeout;
+      const controller = new _abortController2.default();
+      timeoutResult = setTimeout(() => {
+        controller.abort();
+      }, timeout);
     }
 
-    (0, _request2.default)(dataOption, function (error, response) {
-      if (error) {
-        reject(error);
-      } else {
-        let code = response.statusCode;
-        let oldBody = response.body;
-        let newBody;
+    if (typeof query === 'object') {
+      let urlObject = new URL(url);
+      Object.keys(query).forEach(name => {
+        urlObject.searchParams.set(name, query[name]);
+      });
+      url = urlObject.href;
+    }
 
-        try {
-          newBody = JSON.parse(oldBody);
-        } catch (e) {
-          newBody = oldBody;
+    let logDataOption = Object.assign({
+      url
+    }, dataOption);
+    (0, _debug2.default)('http')(logDataOption);
+    let nodefeatchResult = (0, _nodeFetch2.default)(url, dataOption).then(res => {
+      let status = res.status;
+      res.text().then(responseBody => {
+        let responseText = responseBody;
+
+        if (typeof responseBody === 'string') {
+          try {
+            responseBody = JSON.parse(responseBody);
+          } catch (e) {
+            errorHandle(logDataOption, {
+              type: 'parseError',
+              status,
+              message: responseText
+            }, reject);
+            return;
+          }
         }
 
-        if (code >= 300) {
-          reject(newBody);
-        } else {
-          response.body = newBody;
-          resolve(response);
-        } // response.body=newBody;
-        // resolve(response);
+        if (status >= 200 && status < 300) {
+          //success 
+          _log2.default.run({
+            type: 'http',
+            message: {
+              request: logDataOption,
+              response: {
+                status,
+                body: responseBody
+              },
+              error: null
+            }
+          });
 
-      }
+          resolve({
+            status,
+            body: responseBody
+          });
+        } else {
+          //success but status fail
+          errorHandle(logDataOption, {
+            status: status,
+            message: responseBody
+          }, reject);
+          return;
+        }
+      }).catch(e => {
+        //promise all error
+        errorHandle(logDataOption, {
+          type: 'parseError',
+          status,
+          message: e
+        }, reject);
+        return;
+      });
+    }).catch(e => {
+      //request error
+      errorHandle(logDataOption, e, reject);
     });
+
+    if (timeoutResult !== null) {
+      nodefeatchResult.finally(() => {
+        clearTimeout(timeoutResult);
+      });
+    }
   });
 };
 

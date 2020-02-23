@@ -20,6 +20,10 @@ var _config = require("../services/config");
 
 var _config2 = _interopRequireDefault(_config);
 
+var _log = require("../services/log");
+
+var _log2 = _interopRequireDefault(_log);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 let createInfo = {
@@ -160,7 +164,7 @@ class Client extends _index2.default.Event {
     this.focusApp = null;
     this.name = name;
     this.config = {
-      help: true,
+      help: false,
       errorHelp: false
     };
     this.v = '';
@@ -357,6 +361,15 @@ class Client extends _index2.default.Event {
       verification_token
     });
 
+    if (out.status === false) {
+      _log2.default.run({
+        type: 'error_notice',
+        message: {
+          error: out.errorMessage
+        }
+      });
+    }
+
     return out;
   }
 
@@ -425,7 +438,8 @@ class Client extends _index2.default.Event {
       eventName,
       data,
       cmdOption = {},
-      message
+      message,
+      eventFullName
     } = result;
 
     if (!_config2.default.ifCase && typeof cmdOption.command === 'string') {
@@ -441,6 +455,7 @@ class Client extends _index2.default.Event {
       try {
         await this._triggerHelp(data);
         allCallback(null, {
+          event: eventFullName,
           payload: data,
           type,
           command: cmdOption.command,
@@ -454,6 +469,7 @@ class Client extends _index2.default.Event {
       }
     } else {
       let sendData = {
+        event: eventFullName,
         payload: data,
         data: cmdOption.hint,
         type,
@@ -508,6 +524,7 @@ class Client extends _index2.default.Event {
       info
     } = result;
     let sendData = {
+      event: eventFullName,
       payload: data,
       type,
       info,

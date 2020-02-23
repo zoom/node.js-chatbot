@@ -1,259 +1,157 @@
 # Zoom Node.js Chatbot Library
 
-The Zoom Node.js Chatbot Library wraps the OAuth2, sending messages,request zoom openapi, and receiving commands/actions functionality into easy to use functions you can import in your Node.js app.
+The Zoom Node.js Chatbot Library wraps OAuth2, receiving slash commands and user actions, sending messages, and making requests to the Zoom API into easy to use functions you can import in your Node.js app.
 
 ## Installation
 
-To get started install the [@zoomus/chatbot](https://www.npmjs.com/package/@zoomus/chatbot) 
+To get started install the [@zoomus/chatbot](https://www.npmjs.com/package/@zoomus/chatbot) NPM package.
 
-`$ npm install @zoomus/chatbot --save`
+```
+$ npm install @zoomus/chatbot --save
+const {  oauth2, client, setting, log } = require('@zoomus/chatbot');
+```
 
+## Log
 
-## Example
+```js
+const { oauth2, client, setting, log } = require('@zoomus/chatbot');
+//we have two type log of info,one is {type:'http',{error,request,response}},another is {type:'error_notice',message:{error}} this error include http error/webhook data error.
+log(function(info) {
+  let { type, message } = info;
+  if (type === 'http') {
+    let { request, error, response } = message; //response:{status,body},request:{body,url,headers,method}
+    //handle log info;
+  }
+});
+```
 
-1. Add your [Chatbot API credentials](https://marketplace.zoom.us/docs/guides/getting-started/app-types/create-chatbot-app) to the `oauth2` and `client` functions.
-2. Add a help command to let users know how to use your app.
-3. Bind zoom webhook
-4. If you need to request zoom openapi,bind zoom oauth2
+### SendMessage Chatbot Message
 
+```js
+const { oauth2, client, setting, log } = require('@zoomus/chatbot');
+const oauth2Client = oauth2('{{ CLIENT_ID }}', '{{ CLIENT_SECRET }}');
+let chatbot = client(
+  '{{ CLIENT_ID }}',
+  '{{ VERIFICATION_TOKEN }}',
+  '{{ BOT_JID }}'
+).defaultAuth(oauth2Client.connect());
+let zoomApp = chatbot.create({ auth: oauth2Client.connect() });
+await zoomApp.sendMessage({
+  to_jid: 'to_jid: can get from webhook response or GET /users/{userID}',
+  account_id:
+    'account_id: can get from webhook response or from JWT parsed access_token or GET /users/{userID}',
+  content: {
+    head: {
+      text: 'Hello World'
+    }
+  }
+});
+```
 
-#### Initialize zoomapp, bind help command
+### Get ZOOM IM channel message
 
-```javascript
-
-const { oauth2, client } = require('@zoomus/chatbot');
-
-const oauth2Client = oauth2('{{ CLIENT_ID }}', '{{ CLIENT_SECRET }}','{{REDIRECT_URI}}');
-
-//SLASH_COMMAND 
+```js
+const {  oauth2, client, setting, log } = require('@zoomus/chatbot');
 let chatbot = client('{{ CLIENT_ID }}', '{{ VERIFICATION_TOKEN }}', '{{ BOT_JID }}')
-.commands([{ command: '{{ SLASH_COMMAND }}', hint: '<command parameter>', description: 'This is what my chatbot does' }])
-.configurate({ help: true, errorHelp: false })
 .defaultAuth(oauth2Client.connect());
+app.post('/webhook',async function(req,res){
+      try{
+        let data = await chatbot.handle({ body, headers });
+        let { event, command?,type, payload } = data;//if this is slash from zoom im,just like /help,command will be help
+        // we have type 'channel'|'bot', channel express this message from IM channel,bot express this message from the bot which you installed
+        //payload details please see zoom https://marketplace.zoom.us/docs/guides/chatbots/customizing-messages/message-with-dropdown
+        //we have slash  event = 'bot_notification';
+        // we have action event = 'interactive_message_select'|'interactive_message_actions'|'interactive_message_editable'|'interactive_message_fields_editable'
+      }
+      catch(e){
+        //
+      }
+});
 
 ```
 
-#### Bind webhook(express example)
+### OAuth2 Credentials Flow(prepare for request zoom openapi)
 
+```js
+const { oauth2, client, setting, log } = require('@zoomus/chatbot');
+const oauth2Client = oauth2(
+  '{{ CLIENT_ID }}',
+  '{{ CLIENT_SECRET }}',
+  '{{ REDIRECT_URI }}'
+);
+let chatbot = client(
+  '{{ CLIENT_ID }}',
+  '{{ VERIFICATION_TOKEN }}',
+  '{{ BOT_JID }}'
+).defaultAuth(oauth2Client.connect());
 
-```javascript
-
-let middleZoomWebhook=async function(req,res,next){
-      let {body,headers}=req;
-      try{
-          let wehookData = await chatbot.handle({ body, headers });
-          //create a app instance
-          let zoomApp = chatbot.create({ auth: oauth2Client.connect()});
-          res.locals.zoomApp = zoomApp;
-          res.locals.wehookData = wehookData;
-          next();
-      }
-      catch(e){
-       //handle error
-      }
+let middleZoomAuth = async (req, res, next) => {
+  let { code } = req.query;
+  try {
+    let connection = await oauth2Client.connectByCode(code);
+    let zoomApp = chatbot.create({ auth: connection }); //this is the first store tokens,zoomApp have already inject tokens by connection.you can use zoomApp to request zoom openapi
+    res.locals.zoomApp = zoomApp;
+    next();
+  } catch (error) {
+    console.log(error);
+    res.send(error);
+  }
 };
 
-app.post('/webhook',
-  middleZoomWebhook,
-  async function(req,res){
-      let {zoomApp, wehookData}=res.locals;
-      let { payload,data,type,command,message } = wehookData;
-      let { toJid: to_jid,command,data, userId, accountId: account_id, channelName,name } = payload;
-      try{
-        await zoomApp.sendMessage({
-          to_jid,account_id,content:{body:{type:'message',text:'example body'},header:{text:'example header'}}
-        });
-      }
-      catch(e){
-        //handle error
-      }
-      res.send('');
-  });
-
-```
-
-
-#### Authorization && request openapi (express example)
-
-After you [install and authorize](https://marketplace.zoom.us/docs/guides/getting-started/app-types/create-chatbot-app#local-testing) your app, you will be taken to your [redirect url](https://marketplace.zoom.us/docs/guides/getting-started/app-types/create-chatbot-app#credentials). Add this code to handle the redirect.
-
-> Make sure your Redirect URL in your Zoom App Dashboard has the `/authorize` path so it matches with this rout\
-
-```javascript
-
-let middleZoomAuth=async function(req,res,next){
-      let {code}=req.query;
-      try{
-        let connection=await oauth2Client.connectByCode(code);
-        let zoomApp=chatbot.create({auth:connection});
-        res.locals.zoomApp=zoomApp;
-        next();
-      }
-      catch(e){
-        // error handle
-      }
-};
-
-app.post('/auth',
-  middleZoomAuth,
-  async function(req,res){
-      let { zoomApp } = res.locals;
-      let tokens = zoomApp.auth.getTokens();
-      try{
-        //save tokens to db
-        //request openapi meetings
-        let meetings=await zoomApp.request({
-          url:'/v2/users/userid/meetings',
-          method:'post',
-          body:{
-            topic:'my meeting',
-            type:2,
-            settings:{
-              host_video: true,
-              participant_video: true
-            }
-          }
-        });
-        //handle other logic
-      }
-      catch(e){
-        //error handle
-      }
-  });
-
-```
-
-
-## Commands and Actions
-
-To capture requests sent to our Bot endpoint URL, setup an express route that matches the path on our Bot endpoint URL.
-
-**Commands** are [slash commands](https://marketplace.zoom.us/docs/guides/chatbots/sending-messages#receive) a user types in Zoom Chat to interact with your Chatbot.
-
-**Actions** are user interaction events with the [Editable Text](https://marketplace.zoom.us/docs/guides/chatbots/customizing-messages/message-with-editable-text), [Form Field](https://marketplace.zoom.us/docs/guides/chatbots/customizing-messages/message-with-form-field), [Dropdown](https://marketplace.zoom.us/docs/guides/chatbots/customizing-messages/message-with-dropdown), or [Buttons](https://marketplace.zoom.us/docs/guides/chatbots/customizing-messages/message-with-buttons) message types in Zoom Chat.
-
-
-
-### Commands and Actions api
-
-Payload api please see [https://marketplace.zoom.us/docs/guides/chatbots/sending-messages](https://marketplace.zoom.us/docs/guides/chatbots/sending-messages)
-
-```javascript
-
-  //notification webhookData
-
-  Interface WehookData{
-      type:string;//value:one||group, group which said message is from Zoom IM Channel,one which said message is from your app chat
-      payload:Payload;
-      message:string;//origin content from ZOOM IM ,just like 'config project 2019-08-08'
-      data:Array<string>;//just like ['project','2019-08-08']
-      command:string;//command name,just like config
-   }
-
-
-  //action webhookData
- Interface WebhookData{
-      type:string;//value:one||group, group which said message is from Zoom IM Channel,one which said message is from your app chat
-      payload:Payload;
-   }
-
-```
-
-
-## api
-
-
-#### sendmessage
-
-```javascript
-
-  let zoomApp = chatbot.create({ auth: oauth2Client.connect()});
-  let backMessage=await zoomApp.sendMessage({
-    to_jid:String,
-    account_id:String,
-    content:{
-      body:Object,
-      header:Object
-    }
-  });
-
-```
-
-
-#### Request Zoom openapi which on need to handle oauth
-
-```javascript
- let zoomApp=chatbot.create({auth:connection});
- //meeting openapi example
- let meetings=await zoomApp.request({
-          url:'/v2/users/userid/meetings',
-          method:'post',
-          body:{
-            topic:'my meeting',
-            type:2,
-            settings:{
-              host_video: true,
-              participant_video: true
-            }
-        }
-  });
-
-```
-
-#### when oauth2 access_token is out date
-
-```javascript
-
-zoomApp.auth.callbackRefreshTokens(function(tokens){
-  //this tokens is the new access_token info which request by refresh token
+app.get('/authorize', middleZoomAuth, async (req, res) => {
+  res.send('Thanks for installing!');
+  let { zoomApp } = res.locals;
+  let tokens = zoomApp.auth.getTokens();
+  // save tokens to db
+  // db.set('access_token');
+  // db.set('refresh_token');
+  // db.set('expires_in');
 });
-
 ```
 
-#### set tokens from database
+#### Request Zoom Open Api and Refreshing the Access Token(must do oauth2 first)
 
-```javascript
+If the access_token is expired, this function will request a new access_token, so you can update the tokens in your `zoomApp` instance and database.
 
-zoomApp.auth.setTokens({
-        access_token,
-        refresh_token,
-        expires_in
+```js
+
+//see OAuth2 Credentials Flow for zoomApp
+let zoomApp = chatbot.create({ auth:connection });//zoomApp.auth is same with connection variable
+zoomApp.auth.setTokens({//get tokens from database and set into zoomApp
+        access_token: item.get('zoom_access_token'),
+        refresh_token: item.get('zoom_refresh_token'),
+        expires_date: item.get('zoom_access_token_expire_time')
 });
-
-```
-
-#### Retry action if some request is error
-
-```javascript
-
-let {setting}=require('@zoomus/chatbot');
-//this will try to sendMessage again if get last request error(code 7010)
-setting.retry({
-  // request:{}
-  sendMessage:{
-    no:3,
-    timeout(no,lg){return Math.random() * (10000 - 5000) + 5000;},
-    condition(backMsg,ind){//backMsg is https response message,ind is the retry no
-      if(typeof backMsg==='object'&&backMsg.code&&backMsg.code.toString()==='7010'){
-          return true;
-        }
-    }
+zoomApp.auth.callbackRefreshTokens((tokens) => {// when request v2/users/me fail by accesstoken expired,this function will be called,you can save new access_token in database. and then will auto call request /v2/users/me again
+      try {
+          await databaseModels.zoom.update({
+             access_token:tokens.access_token
+             refresh_token:tokens.refresh_token,
+             expires_date: moment().add( tokens.expires_in, 'seconds' ).format
+          });
+      } catch (e) {
+          console.log(e);
+      }
 });
-
+//you can also catch the request error,and refresh access_token by your self.
+// await zoomApp.auth.requestTokensByRefresh(refreshToken); for refresh new access_token
+await zoomApp.request({url:'/v2/users/me', method:'get'});
 ```
 
-#### debug http
+### case sensitive in zoom IM message,default false
 
-```javascript
-
-setting.debug(true);
-DEBUG=http node index.js //now only support http debug
-
+```js
+setting.caseSensitive(false); //in zoom IM ,type help is same with Help
 ```
 
+## Slash Commands and User Actions
 
+[Slash commands](https://marketplace.zoom.us/docs/guides/chatbots/sending-messages#receive) are what the user types in Zoom Chat to interact with your Chatbot.
+
+[User Actions](https://marketplace.zoom.us/docs/guides/chatbots/sending-messages#user-commands) are user interactions with the [Editable Text](https://marketplace.zoom.us/docs/guides/chatbots/customizing-messages/message-with-editable-text), [Form Field](https://marketplace.zoom.us/docs/guides/chatbots/customizing-messages/message-with-form-field), [Dropdown](https://marketplace.zoom.us/docs/guides/chatbots/customizing-messages/message-with-dropdown), or [Buttons](https://marketplace.zoom.us/docs/guides/chatbots/customizing-messages/message-with-buttons) message types in Zoom Chat.
 
 ## Need Support?
+
 The first place to look for help is on our [Developer Forum](https://devforum.zoom.us/), where Zoom Marketplace Developers can ask questions for public answers.
 
 If you can’t find the answer in the Developer Forum or your request requires sensitive information to be relayed, please email us at developersupport@zoom.us.

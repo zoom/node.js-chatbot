@@ -33,26 +33,6 @@ let oauth2 = function(appKey, appSecret, redirect_uri, code) {
       .then(response => {
         let { body } = response;
         resolve(body);
-        // if(statusCode>=300){
-        //     reject(body);
-        //     return;
-        // }
-
-        // if (typeof body === 'string') {
-        //     // utils.debug(body);
-        //     reject(body);
-        //     return;
-        // }
-        // let { access_token } = body;
-        // if (access_token) {
-        //     resolve(body);
-        //     // let storeObj = { access_token, refresh_token, token_type, expires_in };
-        //     // store.set(storeObj);
-        //     // resolve(storeObj);
-        // }
-        // else {
-        //     reject(body);
-        // }
       })
       .catch(error => {
         reject(error);

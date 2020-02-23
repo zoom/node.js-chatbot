@@ -5,9 +5,9 @@ let transform = {
   checkType(str) {
     let kw = this.keyword;
     if (str.indexOf(kw) !== -1) {
-      return 'group';
+      return 'channel';
     }
-    return 'one';
+    return 'bot';
   },
   getConfigCmd(cmd) {
     if(!config.ifCase){
@@ -80,7 +80,6 @@ let transform = {
         }
       };
     } else {
-      //action logic,eventType can be undefined
       let actionInfo = this.switchAction(payload, eventType);
       return {
         status: true,

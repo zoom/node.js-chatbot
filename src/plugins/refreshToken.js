@@ -29,17 +29,6 @@ let refreshToken = function(appKey, appSecret, refresh_token) {
       .then(response => {
         let { body } = response;
         resolve(body);
-        // if (typeof body === 'string') {
-        //   // utils.debug(body);
-        //   reject(body);
-        //   return;
-        // }
-        // let { access_token } = body;
-        // if (access_token) {
-        //   resolve(body);
-        // } else {
-        //   reject(body);
-        // }
       })
       .catch(error => {
         reject(error);

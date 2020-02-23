@@ -16,9 +16,6 @@ let debugUtils=(type='work')=>(msg)=>{
     }
 };
 
-// debugUtils.debugConfig={open:false};
-// debugUtils.decorate=function(debugConfig){
-//     this.debugConfig=debugConfig;
-// };
+
 
 export default debugUtils;

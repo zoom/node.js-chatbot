@@ -12,10 +12,6 @@ var _request = require("./request");
 
 var _request2 = _interopRequireDefault(_request);
 
-var _branch = require("./branch");
-
-var _branch2 = _interopRequireDefault(_branch);
-
 var _Event = require("./Event");
 
 var _Event2 = _interopRequireDefault(_Event);
@@ -36,7 +32,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 let out = {
   request: _request2.default,
-  branch: _branch2.default,
   Event: _Event2.default,
   Store: _store2.default,
   debug: _debug2.default,

@@ -1,17 +1,11 @@
 import Oauth2 from './oauth2/index';
 import Client from './client/index';
 import config from './services/config';
-import log from './services/log';
-
+import serviceLog from './services/log';
 
 let oauth2 = function (appKey, appSecret, redirect_uri){
     return new Oauth2(appKey, appSecret, redirect_uri);
 };
-
-// let zoomClient=function(){
-//     return new Client();
-// }
-
 
 let setting={
     retry(opt){
@@ -41,6 +35,10 @@ let setting={
 
 let client=function(...props){
 return new Client(...props);
+};
+
+let log=function(func){
+    serviceLog.decorate(func);
 };
 
 export { oauth2};
