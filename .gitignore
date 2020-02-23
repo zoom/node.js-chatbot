@@ -1,10 +1,6 @@
 node_modules
 cache
-example
-tests
-tests/*
 development
 .DS_Store
 historyRead
-tests/exp.js
 package-lock.json
