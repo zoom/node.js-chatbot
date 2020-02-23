@@ -170,10 +170,16 @@ class Client extends utils.Event {
     return this;
   }
   create(opt) {
-    let { auth } = opt;
+    let newApp=null;
     let { robot_jid } = this;
-    let newApp = new ClientApp(robot_jid, auth);
-    this.focusApp = newApp;
+    if(typeof opt==='object'){//this create new app
+      let { auth } = opt;
+      newApp = new ClientApp(robot_jid, auth);
+      this.focusApp = newApp;
+    }
+    else{//no create auth,
+      newApp = this.focusApp;
+    }
     return newApp;
   }
   command(opts) {

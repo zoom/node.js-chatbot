@@ -11,7 +11,7 @@ $ npm install @zoomus/chatbot --save
 const {  oauth2, client, setting, log } = require('@zoomus/chatbot');
 ```
 
-## Log
+### Log
 
 ```js
 const { oauth2, client, setting, log } = require('@zoomus/chatbot');
@@ -35,7 +35,7 @@ let chatbot = client(
   '{{ VERIFICATION_TOKEN }}',
   '{{ BOT_JID }}'
 ).defaultAuth(oauth2Client.connect());
-let zoomApp = chatbot.create({ auth: oauth2Client.connect() });
+let zoomApp = chatbot.create();//because we already bind defaultAuth
 await zoomApp.sendMessage({
   to_jid: 'to_jid: can get from webhook response or GET /users/{userID}',
   account_id:
@@ -118,24 +118,50 @@ If the access_token is expired, this function will request a new access_token, s
 //see OAuth2 Credentials Flow for zoomApp
 let zoomApp = chatbot.create({ auth:connection });//zoomApp.auth is same with connection variable
 zoomApp.auth.setTokens({//get tokens from database and set into zoomApp
-        access_token: item.get('zoom_access_token'),
-        refresh_token: item.get('zoom_refresh_token'),
-        expires_date: item.get('zoom_access_token_expire_time')
+        access_token: database.get('zoom_access_token'),
+        refresh_token: database.get('zoom_refresh_token'),
+        expires_date: database.get('zoom_access_token_expire_time')
 });
-zoomApp.auth.callbackRefreshTokens((tokens) => {// when request v2/users/me fail by accesstoken expired,this function will be called,you can save new access_token in database. and then will auto call request /v2/users/me again
-      try {
-          await databaseModels.zoom.update({
+zoomApp.auth.callbackRefreshTokens((tokens,error) => {// when request v2/users/me fail by accesstoken expired,library will auto use refresh_token for request access_token. After that, this function will be called,you can save new access_token in database. and then will auto call request /v2/users/me again
+      if(error){
+        //try use refresh token to get access_token,but also fail,refresh token is invalid
+      }
+      else{
+        try {
+          await database.update({
+             id:'id',
              access_token:tokens.access_token
              refresh_token:tokens.refresh_token,
-             expires_date: moment().add( tokens.expires_in, 'seconds' ).format
+             expires_date: moment().add( tokens.expires_in, 'seconds' ).format()
           });
       } catch (e) {
           console.log(e);
       }
+      }
 });
+
 //you can also catch the request error,and refresh access_token by your self.
 // await zoomApp.auth.requestTokensByRefresh(refreshToken); for refresh new access_token
+//this library use node-fetch library to http request
 await zoomApp.request({url:'/v2/users/me', method:'get'});
+
+// await zoomApp.request({
+//         url: `/v2/users/${userId}/meetings`,
+//         method: 'post',
+//         headers: { 'content-type': 'application/json' },
+//         body: {
+//           topic: `New topic Meeting`,
+//           type: 2,
+//           settings: {
+//             host_video: true,
+//             participant_video: true,
+//             join_before_host: true,
+//             enforce_login: true,
+//             mute_upon_entry: true
+//           }
+//         }
+// });
+
 ```
 
 ### case sensitive in zoom IM message,default false

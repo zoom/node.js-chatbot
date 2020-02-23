@@ -31,13 +31,10 @@ class UserToken extends utils.Event{
           .then(async (tokens) => {
             let out = this.setTokens(tokens);
             try{
-
               if((typeof refreshTokenCallback==='function')&&(typeof out==='object')){
                 await refreshTokenCallback(Object.assign({},out));
               }
-
               await this.trigger('tokens', out);
-
             }
             catch(e){
               //
@@ -46,6 +43,9 @@ class UserToken extends utils.Event{
           })
           .catch(async (err) => {
             try{
+              if(typeof refreshTokenCallback==='function'){
+                await refreshTokenCallback(null,err);
+              }
               await this.trigger('error', error.token(err));
             }
             catch(e){

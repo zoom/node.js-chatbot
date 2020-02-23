@@ -75,6 +75,10 @@ class UserToken extends _index2.default.Event {
         resolve(out);
       }).catch(async err => {
         try {
+          if (typeof refreshTokenCallback === 'function') {
+            await refreshTokenCallback(null, err);
+          }
+
           await this.trigger('error', _error2.default.token(err));
         } catch (e) {//
         }
