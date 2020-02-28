@@ -13,3 +13,7 @@ console error
 ## 1.0.4 
 
 export request method
+
+## 1.0.5
+
+update readme
