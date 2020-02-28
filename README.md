@@ -23,16 +23,8 @@ use *let jwt = require('jsonwebtoken'); let info = jwt.decode(access_token); con
 **First install ZOOM bot app**
 ```js
 const { oauth2, client, setting, log } = require('@zoomus/chatbot');
-const oauth2Client = oauth2(
-  '{{ CLIENT_ID }}',
-  '{{ CLIENT_SECRET }}',
-  '{{ REDIRECT_URI }}'
-);
-let chatbot = client(
-  '{{ CLIENT_ID }}',
-  '{{ VERIFICATION_TOKEN }}',
-  '{{ BOT_JID }}'
-).defaultAuth(oauth2Client.connect());
+const oauth2Client = oauth2( '{{ CLIENT_ID }}', '{{ CLIENT_SECRET }}', '{{ REDIRECT_URI }}' );
+let chatbot = client( '{{ CLIENT_ID }}', '{{ VERIFICATION_TOKEN }}', '{{ BOT_JID }}' ).defaultAuth(oauth2Client.connect());
 
 let middleZoomAuth = async (req, res, next) => {
   let { code } = req.query;
@@ -68,12 +60,14 @@ app.get('/authorize', middleZoomAuth, async (req, res) => {
 
 ```js
 const {  oauth2, client, setting, log } = require('@zoomus/chatbot');
+const oauth2Client = oauth2( '{{ CLIENT_ID }}', '{{ CLIENT_SECRET }}', '{{ REDIRECT_URI }}' );
 let chatbot = client('{{ CLIENT_ID }}', '{{ VERIFICATION_TOKEN }}', '{{ BOT_JID }}').defaultAuth(oauth2Client.connect());
 app.post('/webhook',async function(req,res){
   try{
         let data = await chatbot.handle({ body, headers });
         let { event, command?,type, payload } = data;
         let { toJid, userJid, accountId } = payload;
+        let zoomApp = chatbot.create();
         await zoomApp.sendMessage({
             //is_visible_you: true|false,//only the userid user can see the message
             //user_jid:userJid//which user can see this message
@@ -104,12 +98,12 @@ payload details please see zoom [zoom message-with-dropdown dropdown example](ht
 
 we have slash event = 'bot_notification';
 
-we have action event = 'interactive_message_select'|'interactive_message_actions'|'interactive_message_editable'|'interactive_message_fields_editable'
+we have action event,'interactive_message_select','interactive_message_actions','interactive_message_editable','interactive_message_fields_editable'
 
 ```js
 const {  oauth2, client, setting, log } = require('@zoomus/chatbot');
-let chatbot = client('{{ CLIENT_ID }}', '{{ VERIFICATION_TOKEN }}', '{{ BOT_JID }}')
-.defaultAuth(oauth2Client.connect());
+const oauth2Client = oauth2( '{{ CLIENT_ID }}', '{{ CLIENT_SECRET }}', '{{ REDIRECT_URI }}' );
+let chatbot = client('{{ CLIENT_ID }}', '{{ VERIFICATION_TOKEN }}', '{{ BOT_JID }}').defaultAuth(oauth2Client.connect());
 app.post('/webhook',async function(req,res){
       try{
         let data = await chatbot.handle({ body, headers });
@@ -134,10 +128,10 @@ If the access_token is expired, this function will request a new access_token, s
 
 ```js
 const {  oauth2, client, setting, log } = require('@zoomus/chatbot');
-let chatbot = client('{{ CLIENT_ID }}', '{{ VERIFICATION_TOKEN }}', '{{ BOT_JID }}')
-....
+const oauth2Client = oauth2( '{{ CLIENT_ID }}', '{{ CLIENT_SECRET }}', '{{ REDIRECT_URI }}' );
+let chatbot = client('{{ CLIENT_ID }}', '{{ VERIFICATION_TOKEN }}', '{{ BOT_JID }}').defaultAuth(oauth2Client.connect());
 //see OAuth2 Credentials Flow for zoomApp
-let zoomApp = chatbot.create({ auth:connection });//zoomApp.auth is same with connection variable
+let zoomApp = chatbot.create();//zoomApp.auth is same with connection variable
 zoomApp.auth.setTokens({//get tokens from database and set into zoomApp
         access_token: database.get('access_token'),
         refresh_token: database.get('refresh_token'),

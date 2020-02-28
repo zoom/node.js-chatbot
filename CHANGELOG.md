@@ -17,3 +17,7 @@ export request method
 ## 1.0.5
 
 update readme
+
+## 1.0.6
+
+update readme
