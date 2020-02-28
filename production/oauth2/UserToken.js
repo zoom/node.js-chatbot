@@ -106,11 +106,12 @@ class UserToken extends _index2.default.Event {
       appKey,
       appSecret,
       redirect_uri,
-      tokenCallback
+      tokenCallback,
+      baseUrl
     } = this;
     return new Promise((resolve, reject) => {
       // this.parseCode(code);
-      (0, _oauth2.default)(appKey, appSecret, redirect_uri, code).then(async tokens => {
+      (0, _oauth2.default)(appKey, appSecret, redirect_uri, code, baseUrl).then(async tokens => {
         let out = this.setTokens(tokens);
 
         try {

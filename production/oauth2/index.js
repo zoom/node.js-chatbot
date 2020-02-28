@@ -46,11 +46,12 @@ let configNewUser = function () {
 };
 
 class Oauth2 extends _UserToken2.default {
-  constructor(appKey, appSecret, redirect_uri) {
+  constructor(appKey, appSecret, redirect_uri, baseUrl) {
     super(appKey, appSecret, redirect_uri);
     this.appKey = appKey;
     this.appSecret = appSecret;
-    this.redirect_uri = redirect_uri; // this.store = {};
+    this.redirect_uri = redirect_uri;
+    this.baseUrl = baseUrl; // this.store = {};
 
     this.clientTokens = {};
     this.clientTokensExpire = {

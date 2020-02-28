@@ -69,10 +69,10 @@ class UserToken extends utils.Event{
     //   if (!connect || !code) {
     //     return;
     //   }
-      let { appKey, appSecret, redirect_uri,tokenCallback } = this;
+      let { appKey, appSecret, redirect_uri,tokenCallback,baseUrl } = this;
       return new Promise((resolve, reject) => {
         // this.parseCode(code);
-        oauth2(appKey, appSecret, redirect_uri, code)
+        oauth2(appKey, appSecret, redirect_uri, code,baseUrl)
           .then(async (tokens) => {
             let out = this.setTokens(tokens);
             try{

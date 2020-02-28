@@ -2,9 +2,10 @@ import Oauth2 from './oauth2/index';
 import Client from './client/index';
 import config from './services/config';
 import serviceLog from './services/log';
+import request from './utils/request';
 
-let oauth2 = function (appKey, appSecret, redirect_uri){
-    return new Oauth2(appKey, appSecret, redirect_uri);
+let oauth2 = function (appKey, appSecret, redirect_uri,baseUrl){
+    return new Oauth2(appKey, appSecret, redirect_uri,baseUrl);
 };
 
 let setting={
@@ -45,3 +46,4 @@ export { oauth2};
 export { client};
 export {setting};
 export {log};
+export {request};

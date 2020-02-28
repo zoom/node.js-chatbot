@@ -3,6 +3,8 @@ import nodefetch from 'node-fetch';
 import debug from './debug';
 import serviceLog from '../services/log';
 import AbortController from 'abort-controller';
+import FormData from 'form-data';
+import {URLSearchParams} from 'url';
 
 let errorHandle=(logDataOption,errorInfo,reject)=>{
   serviceLog.run({
@@ -25,6 +27,7 @@ let errorHandle=(logDataOption,errorInfo,reject)=>{
 let requestWrap = opt => {
   let {
     body,
+    bodyType,
     method = 'get',
     url,
     headers = {},
@@ -33,15 +36,27 @@ let requestWrap = opt => {
   } = opt;
   return new Promise((resolve, reject) => {
 
-
-    if(typeof body==='object'){
-      body=JSON.stringify(body);
+    let newBody=body;
+    if(bodyType==='formParameters'){
+      newBody = new URLSearchParams();
+      Object.keys(body).forEach((key)=>{
+        newBody.append(key,body[key]);
+      });
     }
-
+    else if(bodyType==='formData'){
+      newBody = new FormData();
+      Object.keys(body).forEach((key)=>{
+        newBody.append(key,body[key]);
+      });
+    }
+    else if(typeof body==='object'){
+      newBody=JSON.stringify(body);
+    }
+    
     let dataOption={
       method,
       headers,
-      body
+      body:newBody
     };
     let timeoutResult=null;
     if(typeof timeout==='number'){
@@ -67,6 +82,7 @@ let requestWrap = opt => {
     let nodefeatchResult=nodefetch(url,dataOption)
     .then((res)=>{
       let status=res.status;
+      let headers=res.headers;
       res.text().then((responseBody)=>{
         let responseText=responseBody;
         if(typeof responseBody==='string'){
@@ -74,13 +90,16 @@ let requestWrap = opt => {
             responseBody=JSON.parse(responseBody);
           }
           catch(e){
-            errorHandle(logDataOption,{
-              type:'parseError',
-              status,
-              message:responseText
-            },reject);
-            return;
+            responseBody=responseText;//can't parse
           }
+          // catch(e){
+          //   errorHandle(logDataOption,{
+          //     type:'parseError',
+          //     status,
+          //     message:responseText
+          //   },reject);
+          //   return;
+          // }
         }
         if (status >= 200 && status < 300){//success 
           serviceLog.run({
@@ -94,7 +113,7 @@ let requestWrap = opt => {
               error:null
             }
           });
-          resolve({status,body:responseBody});
+          resolve({status,body:responseBody,headers});
         } else {//success but status fail
           errorHandle(logDataOption,{
             status:status,
@@ -105,7 +124,7 @@ let requestWrap = opt => {
       })
       .catch((e)=>{//promise all error
         errorHandle(logDataOption,{
-          type:'parseError',
+          // type:'parseError',
           status,
           message:e
         },reject);

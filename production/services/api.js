@@ -35,9 +35,10 @@ let url = {
       if (type === 'url') {
         let {
           redirect_uri,
-          code
+          code,
+          baseUrl
         } = option;
-        let url = `${_config2.default.url}/oauth/token`;
+        let url = baseUrl || `${_config2.default.url}/oauth/token`;
         return `${url}?grant_type=authorization_code&code=${code}&redirect_uri=${redirect_uri}`;
       } else if (type in this) {
         return this[type];

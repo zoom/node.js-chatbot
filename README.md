@@ -8,14 +8,16 @@ To get started install the [@zoomus/chatbot](https://www.npmjs.com/package/@zoom
 
 ```
 $ npm install @zoomus/chatbot --save
-const {  oauth2, client, setting, log } = require('@zoomus/chatbot');
+const {  oauth2, client, setting, log,request } = require('@zoomus/chatbot');
 ```
 
 ### Log
 
+we have two type log of info,one is {type:'http',{error,request,response}},another is {type:'error_notice',message:{error}} this error include http error/webhook data error.
+you can use request method to auto log http information in custom logic,request({url:'',headers,body,bodyType,method});After request happen,will auto log information in the callback
+
 ```js
-const { oauth2, client, setting, log } = require('@zoomus/chatbot');
-//we have two type log of info,one is {type:'http',{error,request,response}},another is {type:'error_notice',message:{error}} this error include http error/webhook data error.
+const { oauth2, client, setting, log,request } = require('@zoomus/chatbot');
 log(function(info) {
   let { type, message } = info;
   if (type === 'http') {
@@ -25,7 +27,54 @@ log(function(info) {
 });
 ```
 
+### Common request method
+
+Request is the method which wrap [node-fetch](https://www.npmjs.com/package/node-fetch) and put form-data and form-parameters in simple object
+
+```js
+const {request } = require('@zoomus/chatbot');
+//application/json type
+request({
+  url:string,
+  method:'post',
+  headers:{},
+  body:{a:1,b:2}
+});
+
+//form x-www-form-urlencoded
+request({
+  url:string,
+  method:'post',
+  headers:{},
+  body:{a:1,b:2},
+  bodyType:'formParameters'
+});
+
+//form-data 
+request({
+  url:string,
+  method:'post',
+  headers:{},
+  body:{a:1,b:2},
+  bodyType:'formData'
+});
+
+//get query
+request({
+  url:string,
+  method:'get',
+  headers:{},
+  query:{
+    a:1,b:2
+  }
+});
+
+```
+
+
 ### SendMessage Chatbot Message
+
+follow the code to send message to ZOOM IM chat
 
 ```js
 const { oauth2, client, setting, log } = require('@zoomus/chatbot');
@@ -48,7 +97,9 @@ await zoomApp.sendMessage({
 });
 ```
 
-### Get ZOOM IM channel message
+### Get ZOOM IM chat message
+
+handle ZOOM IM chat webhook message,message have two sources, one is 'channel',another is 'bot'.And message have two types,one is 'slash',another is 'action'
 
 ```js
 const {  oauth2, client, setting, log } = require('@zoomus/chatbot');
@@ -71,6 +122,8 @@ app.post('/webhook',async function(req,res){
 ```
 
 ### OAuth2 Credentials Flow(prepare for request zoom openapi)
+
+use zoom oauth2 to request zoom openapi simple
 
 ```js
 const { oauth2, client, setting, log } = require('@zoomus/chatbot');
@@ -118,9 +171,9 @@ If the access_token is expired, this function will request a new access_token, s
 //see OAuth2 Credentials Flow for zoomApp
 let zoomApp = chatbot.create({ auth:connection });//zoomApp.auth is same with connection variable
 zoomApp.auth.setTokens({//get tokens from database and set into zoomApp
-        access_token: database.get('zoom_access_token'),
-        refresh_token: database.get('zoom_refresh_token'),
-        expires_date: database.get('zoom_access_token_expire_time')
+        access_token: database.get('access_token'),
+        refresh_token: database.get('refresh_token'),
+        expires_date: database.get('expires_date')
 });
 zoomApp.auth.callbackRefreshTokens((tokens,error) => {// when request v2/users/me fail by accesstoken expired,library will auto use refresh_token for request access_token. After that, this function will be called,you can save new access_token in database. and then will auto call request /v2/users/me again
       if(error){

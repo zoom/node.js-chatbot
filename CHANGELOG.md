@@ -9,3 +9,7 @@ add error in callbackRefreshTokens,change readme
 ## 1.0.3
 
 console error
+
+## 1.0.4 
+
+export request method

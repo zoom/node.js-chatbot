@@ -18,8 +18,8 @@ let url={
     oauth2:{
         get(type,option){
             if(type==='url'){
-                let { redirect_uri, code } = option;
-                let url = `${config.url}/oauth/token`;
+                let { redirect_uri, code,baseUrl } = option;
+                let url =baseUrl||`${config.url}/oauth/token`;
                 return `${url}?grant_type=authorization_code&code=${code}&redirect_uri=${redirect_uri}`;
             }
             else if(type in this){

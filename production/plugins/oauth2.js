@@ -18,7 +18,7 @@ let createAppString = (appKey, appSecret) => {
   return 'Basic ' + Buffer.from(`${appKey}:${appSecret}`).toString('base64');
 };
 
-let oauth2 = function (appKey, appSecret, redirect_uri, code) {
+let oauth2 = function (appKey, appSecret, redirect_uri, code, baseUrl) {
   // let { appKey, appSecret, redirect_uri, code: storeCode } = store.get(["appKey", "appSecret", "code", "redirect_uri"]);
   return new Promise((resolve, reject) => {
     // if (!appKey || !appSecret) {
@@ -33,7 +33,8 @@ let oauth2 = function (appKey, appSecret, redirect_uri, code) {
 
     let url = _api2.default.oauth2.get('url', {
       code,
-      redirect_uri
+      redirect_uri,
+      baseUrl
     });
 
     let method = _api2.default.oauth2.get('method');

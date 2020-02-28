@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.log = exports.setting = exports.client = exports.oauth2 = undefined;
+exports.request = exports.log = exports.setting = exports.client = exports.oauth2 = undefined;
 
 var _index = require("./oauth2/index");
 
@@ -21,10 +21,14 @@ var _log = require("./services/log");
 
 var _log2 = _interopRequireDefault(_log);
 
+var _request = require("./utils/request");
+
+var _request2 = _interopRequireDefault(_request);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-let oauth2 = function (appKey, appSecret, redirect_uri) {
-  return new _index2.default(appKey, appSecret, redirect_uri);
+let oauth2 = function (appKey, appSecret, redirect_uri, baseUrl) {
+  return new _index2.default(appKey, appSecret, redirect_uri, baseUrl);
 };
 
 let setting = {
@@ -72,3 +76,4 @@ exports.oauth2 = oauth2;
 exports.client = client;
 exports.setting = setting;
 exports.log = log;
+exports.request = _request2.default;
