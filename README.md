@@ -17,7 +17,7 @@ use zoom oauth2 to request zoom openapi simple
 
 use expires_date to auto check expired time,and auto use refresh_token to request access_token
 
-use *let jwt = require('jsonwebtoken'); let info = jwt.decode(access_token); console.log(info)* can get zoom clientId,code,userId,accountId from this method
+use *let userInfo = await zoomApp.request({url:'/v2/users/me', method:'get'}); console.log(userInfo)* can get zoom account_id,jid and others information.(origin jwt.decode not useful again)
 
 
 **First install ZOOM bot app**
