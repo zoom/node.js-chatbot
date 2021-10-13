@@ -66,8 +66,8 @@ class Event {
         } catch (e) {//
         }
       }
-    } else {} // reject(`not bind ${eventType} event`);
-      // });
+    } else {// reject(`not bind ${eventType} event`);
+    } // });
 
   }
 

@@ -74,6 +74,7 @@ let requestWrap = opt => {
       });
     } else if (typeof body === 'object') {
       newBody = JSON.stringify(body);
+      headers['Content-Type'] = 'application/json';
     }
 
     let dataOption = {
