@@ -1,3 +1,9 @@
+#### THIS PACKAGE IS DEPRECATED
+
+Please see the latest official package [@zoom/rivet](https://www.npmjs.com/package/@zoom/rivet), thank you!
+
+---
+
 # Zoom Node.js Chatbot Library
 
 The Zoom Node.js Chatbot Library wraps OAuth2, receiving slash commands and user actions, sending messages, and making requests to the Zoom API into easy to use functions you can import in your Node.js app.
